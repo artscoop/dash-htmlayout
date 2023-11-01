@@ -1,3 +1,3 @@
-from .builder import LayoutBuilder
+from .builder import Builder
 
-__all__ = [LayoutBuilder]
+__all__ = [Builder]

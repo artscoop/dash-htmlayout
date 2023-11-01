@@ -1,16 +1,48 @@
-"""Build layouts from HTML snippets."""
+"""
+Build layouts from HTML snippets.
+
+"""
+import re
 import sys
 from importlib import import_module
 from os import PathLike
-from typing import Optional, Type
+from typing import Optional, Type, Any
 
 from dash.development.base_component import Component
 from lxml import etree
 from lxml.etree import _Element
 
 
-class LayoutBuilder:
-    """Build layouts using HTML snippets."""
+class Builder:
+    """
+    Class to build layouts using HTML snippets.
+
+    Objects of this class allow loading HTML files describing
+    a Dash application layout. All tag names of HTML5 are supported
+    by default. Components that are not strictly matching an HTML
+    component, but are available in Dash are also supported using
+    a prefix.
+
+    ```python {.numberLines}
+    from dash import Dash
+    from dash.htmlayout import Builder
+
+    app = Dash("myapp")
+    builder = Builder("URL or filename")
+    dropdown = builder.get_component("test-dropdown")
+    app.layout = builder.layout
+    app.run(debug=True)
+    ```
+
+    ```html
+    <div>
+        <h1>Simple Dashboard</h1>
+        <div class="content">
+            <dcc.dropdown id="test-dropdown"/>
+        </div>
+    </div>
+    ```
+    """
     _module_registry = {
         "dash.html": None,
         "dash.dcc": "dcc",
@@ -24,19 +56,49 @@ class LayoutBuilder:
     _component_registry: dict[str, type] = {}
     # List of modules with already autodetected components
     _autodetected_modules: set = set()
-    # Layout root
-    layout: Optional[Component] = None
     # Components with id
     _components: dict[str, Component] = {}
+    # Layout root component
+    layout: Optional[Component] = None
 
-    def __new__(cls, *args, **kwargs):
-        """Create a new LayoutBuilder object."""
+    def __new__(cls, *args, file: PathLike = None, **kwargs) -> "Builder":
+        """
+        Instanciate a new LayoutBuilder object.
+
+        Every new object will start an autodetection.
+
+        See Also:
+            `Builder.autodetect`
+        """
+        instance = super().__new__(cls, *args, **kwargs)
         cls.autodetect()
-        return super().__new__(cls, *args, **kwargs)
+        if file is not None:
+            instance.load(file)
+        return instance
 
     @classmethod
     def autodetect(cls):
-        """Autodetect and register components from the module registry."""
+        """
+        Autodetect and register components from the module registry.
+
+        This class method registers all the Dash `Component` classes
+        found in various modules, mainly the default ones provided with
+        Dash.
+
+        All those classes will be recognized as HTML tags in input documents.
+        The name of the tag is derived from the name of the component class,
+        but all lowercase. When the component class is not in the `dash.html`
+        module, the name must be prefixed with a namespace. For example:
+
+        ```
+        dash.html.Section → <section>
+        dash_daq.ColorPicker → <daq.colorpicker>
+        ```
+
+        When there is a prefix, it is derived from the name of the module
+        it represents, but without the redundant `dash` name. Words like
+        `component` or `components` are also removed from the prefix.
+        """
         for module_name, prefix in cls._module_registry.items():
             try:
                 if module_name not in cls._autodetected_modules:
@@ -57,15 +119,28 @@ class LayoutBuilder:
                 )
 
     @classmethod
-    def register_library(cls, path: str, prefix: Optional[str]) -> bool:
-        """Register a new module providing Dash components."""
-        if path not in cls._module_registry:
+    def register_library(cls, path: str, prefix: Optional[str], replace: bool = False) -> bool:
+        """
+        Register a new module providing Dash components.
+
+        A sensible default is already provided for known libraries,
+        but you can custom libraries with this method. You just have to
+        call this by passing a module path and a prefix to apply to detected
+        components:
+
+        ```python
+        from dash.htmlayout import Builder
+
+        Builder.register_library("dash_colorful_lib", "colorful")
+        ```
+        """
+        if path not in cls._module_registry or replace:
             cls._module_registry[path] = prefix
             cls.autodetect()
             return True
         return False
 
-    def load_layout(self, path: PathLike) -> Component:
+    def load(self, path: PathLike) -> Component:
         """
         Build a layout from an HTML file.
 
@@ -98,9 +173,9 @@ class LayoutBuilder:
             A Dash component with children and attributes.
         """
         tag_name: str = element.tag
-        tag_text: Optional[str] = element.text.strip() if element.text else None
-        tag_children: list = [tag_text] if tag_text else []
-        tag_attrs: dict = element.attrib
+        tag_text: str = (element.text or "").strip()
+        tag_children: list = list(filter(None, [tag_text]))
+        tag_attrs: dict = self._convert_list_attributes(element.attrib)
         tag_id: Optional[str] = element.attrib.get("id")
         component: Component = self.to_component(tag_name, **tag_attrs)
         if tag_id is not None:
@@ -111,3 +186,26 @@ class LayoutBuilder:
                 child_component: Component = self._build_tree(child)
                 component.children.append(child_component)
         return component
+
+    @classmethod
+    def _convert_list_attributes(cls, attributes: dict) -> dict:
+        output: dict[str, Any] = dict(sorted(attributes.items()))
+        converted_keys: set = set()
+        generated_keys: dict = {}
+        for key in output:
+            key = key.lower()
+            # Match keys named data-list-<name>-<index>
+            # and create a list from that
+            matching = re.match(r"^(data-list-)(\w+)-(\d+)", key)
+            if matching:
+                new_key = matching.groups()[1]
+                generated_keys[new_key]: list = [] if new_key not in generated_keys else generated_keys[new_key]
+                generated_keys[new_key].append(output[key])
+                converted_keys.add(key)
+        output.update(generated_keys)
+        for key in converted_keys:
+            del output[key]
+        return output
+
+
+
