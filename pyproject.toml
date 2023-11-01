@@ -22,4 +22,4 @@ classifiers = [
 "Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
 
 [tool.hatch.build]
-packages = ["src/dash"]
+packages = ["src/dash", "src/dash/htmlayout"]
