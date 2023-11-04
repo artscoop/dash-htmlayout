@@ -1,5 +1,18 @@
 # Build your Dash layouts with HTML snippets 
 
+This package allows you to craft your Dash application layouts
+by writing HTML instead of a cascade of Python objects.
+
+## Installation
+
+You can install the package with pip:
+
+```bash
+pip install dash-htmlayout
+```
+
+## Introduction
+
 It's a bit counterproductive to force users to build dashboard
 layouts using Python, when most component classes are translated
 into HTML.
