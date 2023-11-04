@@ -1,12 +1,9 @@
-"""
-Build layouts from HTML snippets.
-
-"""
+"""Build layouts from HTML snippets."""
 import re
 import sys
 from importlib import import_module
 from os import PathLike
-from typing import Optional, Type, Any
+from typing import Optional, Type, Any, Callable, Iterable
 
 from dash.development.base_component import Component
 from lxml import etree
@@ -23,7 +20,7 @@ class Builder:
     component, but are available in Dash are also supported using
     a prefix.
 
-    ```python {.numberLines}
+    ```python
     from dash import Dash
     from dash.htmlayout import Builder
 
@@ -43,6 +40,7 @@ class Builder:
     </div>
     ```
     """
+
     _module_registry = {
         "dash.html": None,
         "dash.dcc": "dcc",
@@ -51,7 +49,7 @@ class Builder:
         "dash_bio": "bio",
         "dash_slicer": "slicer",
         "dash_player": "player",
-        "dash_bootstrap_components": "bootstrap"
+        "dash_bootstrap_components": "bootstrap",
     }
     _component_registry: dict[str, type] = {}
     # List of modules with already autodetected components
@@ -71,17 +69,17 @@ class Builder:
             `Builder.autodetect`
         """
         instance = super().__new__(cls, *args, **kwargs)
-        cls.autodetect()
+        cls._autodetect_components()
         if file is not None:
             instance.load(file)
         return instance
 
     @classmethod
-    def autodetect(cls):
+    def _autodetect_components(cls):
         """
         Autodetect and register components from the module registry.
 
-        This class method registers all the Dash `Component` classes
+        This class method registers *all* the Dash `Component` classes
         found in various modules, mainly the default ones provided with
         Dash.
 
@@ -98,6 +96,11 @@ class Builder:
         When there is a prefix, it is derived from the name of the module
         it represents, but without the redundant `dash` name. Words like
         `component` or `components` are also removed from the prefix.
+
+        Notes:
+            This method is called automatically when instantiating your
+            first `Builder` object, and everytime you register a new library
+            of components with `Builder.register_library`.
         """
         for module_name, prefix in cls._module_registry.items():
             try:
@@ -119,7 +122,9 @@ class Builder:
                 )
 
     @classmethod
-    def register_library(cls, path: str, prefix: Optional[str], replace: bool = False) -> bool:
+    def register_library(
+        cls, path: str, prefix: Optional[str], replace: bool = False
+    ) -> bool:
         """
         Register a new module providing Dash components.
 
@@ -136,7 +141,7 @@ class Builder:
         """
         if path not in cls._module_registry or replace:
             cls._module_registry[path] = prefix
-            cls.autodetect()
+            cls._autodetect_components()
             return True
         return False
 
@@ -160,7 +165,9 @@ class Builder:
     @classmethod
     def to_component(cls, tag: str, **options) -> Optional[Component]:
         """Get a component from an HTML tag."""
-        component: Optional[Type[Component]] = cls._component_registry.get(tag.lower(), None)
+        component: Optional[Type[Component]] = cls._component_registry.get(
+            tag.lower(), None
+        )
         if component is not None:
             component: Component = component(**options)
         return component
@@ -175,7 +182,15 @@ class Builder:
         tag_name: str = element.tag
         tag_text: str = (element.text or "").strip()
         tag_children: list = list(filter(None, [tag_text]))
-        tag_attrs: dict = self._convert_list_attributes(element.attrib)
+        tag_attrs: dict = element.attrib
+        attr_transforms: Iterable[Callable] = (
+            self._convert_list_attributes,
+            self._convert_bool_attributes,
+        )
+        # Apply transforms for data-... attributes
+        for transform in attr_transforms:
+            tag_attrs = transform(tag_attrs)
+            print(tag_attrs)
         tag_id: Optional[str] = element.attrib.get("id")
         component: Component = self.to_component(tag_name, **tag_attrs)
         if tag_id is not None:
@@ -189,6 +204,16 @@ class Builder:
 
     @classmethod
     def _convert_list_attributes(cls, attributes: dict) -> dict:
+        """
+        Convert `data-list-attr` attributes to `attr` as a list.
+
+        Args:
+            attributes: dictionary of HTML/XML attributes.
+
+        Returns:
+            Dictionary of attributes with `data-list` attributes
+            converted to lists.
+        """
         output: dict[str, Any] = dict(sorted(attributes.items()))
         converted_keys: set = set()
         generated_keys: dict = {}
@@ -199,7 +224,9 @@ class Builder:
             matching = re.match(r"^(data-list-)(\w+)-(\d+)", key)
             if matching:
                 new_key = matching.groups()[1]
-                generated_keys[new_key]: list = [] if new_key not in generated_keys else generated_keys[new_key]
+                generated_keys[new_key]: list = (
+                    [] if new_key not in generated_keys else generated_keys[new_key]
+                )
                 generated_keys[new_key].append(output[key])
                 converted_keys.add(key)
         output.update(generated_keys)
@@ -207,5 +234,37 @@ class Builder:
             del output[key]
         return output
 
+    @classmethod
+    def _convert_bool_attributes(cls, attributes: dict) -> dict:
+        """
+        Convert `data-bool-attr` attributes to `attr` as a boolean.
 
+        Args:
+            attributes: dictionary of HTML/XML attributes.
 
+        Returns:
+            Dictionary of attributes with `data-bool` attributes
+            converted to booleans.
+        """
+        output: dict[str, Any] = dict(sorted(attributes.items()))
+        print(output)
+        converted_keys: set = set()
+        generated_keys: dict = {}
+        for key in output:
+            key = key.lower()
+            # Match keys named data-list-<name>-<index>
+            # and create a list from that
+            matching = re.match(r"^(data-bool-)(\w+)", key)
+            if matching:
+                new_key = matching.groups()[1]
+                generated_keys[new_key]: bool = output[key].lower() in (
+                    "1",
+                    "true",
+                    "yes",
+                    "on",
+                )
+                converted_keys.add(key)
+        output.update(generated_keys)
+        for key in converted_keys:
+            del output[key]
+        return output
