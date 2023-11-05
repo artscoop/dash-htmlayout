@@ -23,6 +23,7 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://github.com/artscoop/dash-htmlayout"
+"Documentation" = "https://artscoop.github.io/dash-htmlayout/htmlayout.html"
 "Bug Tracker" = "https://github.com/artscoop/dash-htmlayout/issues"
 
 [tool.hatch.build]
