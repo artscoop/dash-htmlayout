@@ -4,6 +4,10 @@ This package provides the ability to build dashboard layouts in Dash by writing 
 
 ## Installation
 
+The package is published on 
+
+![PyPI](https://img.shields.io/badge/pypi-3775A9?style=for-the-badge&logo=pypi&logoColor=white)
+
 You can install this package by using a tool like `pip`:
 
 ```bash
@@ -29,33 +33,36 @@ app.layout = builder.layout
 ### In the HTML file
 
 Since the usual way to build a Dash layout does not involve making the whole HTML5 structure but only what's in the
-`<body>` tag, the same has to be observed in your HTML file. For example:
+`<body>` tag, the same has to be observed in your HTML/XML file. For example:
 
 ```html
 <section>
     <h1 id="dash-title">Title</h1>
-    <dcc.dropdown id="select-1" data-list-options-0="Red" data-list-options-1="Blue"/>
+    <dcc-dropdown id="select-1" data-options="['Red', 'Blue']"/>
 </section>
 ```
 
+Only HTML comments and tags backed up by a component offered by the Dash libraries would be
+accepted in your document.
+
+### Non-string parameters
+
 Any parameter for a component class can be defined as a tag attribute, as long as it is a
-`str`. 
-
-Parameters of type `list[str]` can be provided in HTML using the following scheme:
+`str`. Parameters that are not of type `str` can be provided in HTML using the following scheme:
 
 ```html
-<div data-list-parameter-0="first item" data-list-parameter-1="second item" ...>
+<div data-parameter="python literal to evaluate" ...>
 ```
 
-Parameters of type `bool` can be provided in HTML using the following scheme:
+For example, the `Dropdown` and `Slider` components from `dash.dcc` accept some arguments that are lists or integers, like `options` and `value`. You may pass those in HTML like follows:
 
 ```html
-<div data-bool-parameter1="1">
+<dcc-slider data-value="1" data-min="0" data-max="10" data-step="5" />
+<dcc-dropdown data-options="['Option 1', 'Option 2']" />
 ```
 
-**Note**: Text that will be considered `True` is `"1"`, `"true"`, `"yes"` or `"on"`
-
-
+Every attribute starting with the name `data-<name>` will be treated as the argument `<name>`, with its text value
+evaluated as a Python literal.
 
 ### What tag names to use for non-HTML components?
 
@@ -64,7 +71,10 @@ Generally, the prefix is the most relevant part of the module name, eg. `table` 
 The prefix must be used as following:
 
 ```html
-<dcc.dropdown/>
-<table.datatable/>
-<daq.booleanswitch on=false/>
+<dcc-dropdown/>
+<table-datatable/>
+<daq-booleanswitch data-on="False"/>
 ```
+
+Dot notation is not used for prefixing because it interferes with content editor helpers like Emmet, and
+will be considered as a class.

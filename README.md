@@ -11,93 +11,53 @@ You can install the package with pip:
 pip install dash-htmlayout
 ```
 
+## Documentation
+
+[Read documentation to learn momre](https://github.com/artscoop/dash-htmlayout/blob/7b35a33e8d7106e276aba06a06b9e8e4e681e18b/pyproject.toml#L26)
+
 ## Introduction
 
 It's a bit counterproductive to force users to build dashboard
 layouts using Python, when most component classes are translated
 into HTML.
 
-Having to write code such as the following:
-
-```python
-app.layout = html.Section()
-app.layout.children = [
-    html.H1("Dashboard component.", className="mb-5"),
-    html.Div(
-        className="row",
-        children=[
-            html.Div(
-                className="col-3",
-                children=[
-                    html.Div(
-                        className="form-group mb-3",
-                        children=[
-                            html.Label("Genres filter"),
-                            dcc.Dropdown(
-                                id="genre-list",
-                                placeholder="Filter genres",
-                                multi=True,
-                            ),
-                        ],
-                    ),
-                    html.Div(
-                        className="form-group mb-3",
-                        children=[
-                            html.Label("Max results"),
-                            dcc.Slider(
-                                id="genre-limit", min=5, max=15, step=1, value=10
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-            html.Div(
-                className="col-5 d-flex align-items-stretch",
-                children=[
-                    html.Div(className="card flex-fill", children=[
-                        html.H2("Genre information", className="text-center card-header"),
-                        html.Div(className="card-body", children=[
-                            dcc.Graph(id="genre-info"),
-                        ]),
-                    ]),
-                ],
-            ),
-            html.Div(
-                className="col-4 d-flex align-items-stretch flex-fill",
-                children=[
-                    html.Div(className="card flex-fill", children=[
-                        html.H2("Artists", className="text-center card-header"),
-                        dcc.Markdown(id="artist-info", className="card-body"),
-                    ]),
-                ],
-            ),
-        ],
-    ),
-]
-```
-
+Having to write code with deeply nested object instances to mimic HTML
 should almost be considered malpractice in Python when there is a language
 and a document type that addresses this exact need; HTML.
 
-Instead, this package provides a simple class to generate layouts
-from a partial HTML document. For example, we could partially reproduce the above
-example with such a file:
+This package provides a simple class to generate layouts
+from a partial HTML snippet. For example, we could partially reproduce a classic
+layout with the following document:
 
 ```html
+<!-- Example with Bootstrap classes and some components -->
 <section>
     <h1 class="mb-5">Dashboard component.</h1>
     <div class="row">
         <div class="col-3">
             <div class="form-group mb-3">
                 <label for="">Genres filter</label>
-                <dcc.dropdown id="genre-list" placeholder="Filter genres" multi/>
+                <dcc-dropdown id="genre-list" placeholder="Filter genres" data-multi="True"/>
             </div>
             <div class="form-group mb-3">
                 <label for="">Max results</label>
-                <dcc.slider id="genre-limit" min=5 max=15 step=1 value=10/>
+                <dcc-slider id="genre-limit" data-value="1" data-min="0" data-max="10"/>
             </div>
         </div>
         ...
     </div>
 </section>
+```
+
+### In Python
+
+```python
+from dash import Dash
+from dash.htmlayout import Builder
+
+application = Dash("appname")
+builder = Builder(file="myfile.html")
+application.layout = builder.layout
+
+...
 ```
