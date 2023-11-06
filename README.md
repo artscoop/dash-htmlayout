@@ -13,7 +13,7 @@ pip install dash-htmlayout
 
 ## Documentation
 
-[Read documentation to learn momre](https://github.com/artscoop/dash-htmlayout/blob/7b35a33e8d7106e276aba06a06b9e8e4e681e18b/pyproject.toml#L26)
+[Read documentation to learn more](https://artscoop.github.io/dash-htmlayout/htmlayout.html)
 
 ## Introduction
 
