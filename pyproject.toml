@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dash-htmlayout"
-version = "0.9.4"
+version = "1.0.0"
 authors = [
   { name="Steve Kossouho", email="noreply@example.com" },
 ]
