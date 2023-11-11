@@ -154,10 +154,14 @@ class Builder:
         Returns:
             The root of the layout tree with all its descendants.
         """
-        parser = etree.XMLParser(remove_comments=True, ns_clean=True, remove_pis=True, resolve_entities=False)
+        parser = etree.XMLParser(
+            remove_comments=True, ns_clean=True, remove_pis=True,
+            resolve_entities=False, remove_blank_text=True)
         root = etree.parse(path, parser=parser).getroot()
         self._components = {}
-        self.layout = self._build_tree(root)
+        print(etree.tostring(root))
+        if root:
+            self.layout = self._build_tree(root)
         return self.layout
 
     def get_component(self, identifier: str) -> Optional[Component]:

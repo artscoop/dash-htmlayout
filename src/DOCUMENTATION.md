@@ -43,7 +43,7 @@ Since the usual way to build a Dash layout does not involve making the whole HTM
 ```
 
 Only HTML comments and tags backed up by a component offered by the Dash libraries would be
-accepted in your document.
+accepted in your document. Also, your document must have a valid root element (anything usable).
 
 ### Non-string parameters
 
@@ -78,3 +78,11 @@ The prefix must be used as following:
 
 Dot notation is not used for prefixing because it interferes with content editor helpers like Emmet, and
 will be considered as a class.
+
+### Finding elements in layout by ID
+
+If you give an ID to a component in your layout, you can find it easily in the builder by using the `get_component` method:
+
+```python
+component = builder.get_component("tag-identifier")
+```

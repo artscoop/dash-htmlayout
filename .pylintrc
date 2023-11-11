@@ -1,5 +1,0 @@
-[TYPECHECK]
-ignored-modules=numpy,lxml
-
-[MESSAGES CONTROL]
-disable=import-error,no-name-in-module

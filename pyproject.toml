@@ -28,3 +28,9 @@ dependencies = [
 
 [tool.hatch.build]
 packages = ["src/dash", "src/dash/htmlayout"]
+
+[tool.pylint.TYPECHECK]
+ignored-modules=numpy,lxml
+
+[tool.pylint.'MESSAGES CONTROL']
+disable=import-error,no-name-in-module
