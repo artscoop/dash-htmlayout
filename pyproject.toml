@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dash-htmlayout"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
   { name="Steve Kossouho", email="noreply@example.com" },
 ]
@@ -30,7 +30,7 @@ dependencies = [
 packages = ["src/dash", "src/dash/htmlayout"]
 
 [tool.pylint.TYPECHECK]
-ignored-modules=numpy,lxml
+ignored-modules= ["numpy", "lxml"]
 
 [tool.pylint.'MESSAGES CONTROL']
-disable=import-error,no-name-in-module
+disable=["import-error", "no-name-in-module"]
