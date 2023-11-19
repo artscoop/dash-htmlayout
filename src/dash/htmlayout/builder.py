@@ -159,7 +159,6 @@ class Builder:
             resolve_entities=False, remove_blank_text=True)
         root = etree.parse(path, parser=parser).getroot()
         self._components = {}
-        print(etree.tostring(root))
         if root:
             self.layout = self._build_tree(root)
         return self.layout
