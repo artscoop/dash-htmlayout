@@ -43,18 +43,26 @@ Since the usual way to build a Dash layout does not involve making the whole HTM
 ```
 
 Only HTML comments and tags backed up by a component offered by the Dash libraries would be
-accepted in your document. Also, your document must have a valid root element (anything usable).
+accepted in your document. Also, your document must have a valid root element (anything usable
+that is not a `head`, `body`, `html`, `script`, etc. tag).
 
 ### Non-string parameters
 
 Any parameter for a component class can be defined as a tag attribute, as long as it is a
-`str`. Parameters that are not of type `str` can be provided in HTML using the following scheme:
+`str`. That means that string attributes can be passed as-is.
+
+```html
+<div parameter="string only">
+```
+
+Parameters that are not of type `str` can be provided in HTML using the following scheme:
 
 ```html
 <div data-parameter="python literal to evaluate" ...>
 ```
 
-For example, the `Dropdown` and `Slider` components from `dash.dcc` accept some arguments that are lists or integers, like `options` and `value`. You may pass those in HTML like follows:
+For example, the `Dropdown` and `Slider` components from `dash.dcc` accept some arguments that are lists or integers, like `options` and `value`. You may pass those in HTML like follows, prefixing the attribute with `data-` and putting a Python
+literal in the attribute string:
 
 ```html
 <dcc-slider data-value="1" data-min="0" data-max="10" data-step="5" />

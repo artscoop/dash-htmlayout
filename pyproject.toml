@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dash-htmlayout"
-version = "1.0.2"
+version = "1.0.3"
 authors = [
   { name="Steve Kossouho", email="noreply@example.com" },
 ]
@@ -28,6 +28,12 @@ dependencies = [
 
 [tool.hatch.build]
 packages = ["src/dash", "src/dash/htmlayout"]
+
+[tool.hatch.build.targets.sdist]
+sources = ["src"]
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
 
 [tool.pylint.TYPECHECK]
 ignored-modules= ["numpy", "lxml"]

@@ -12,8 +12,12 @@ class BuilderTestCase(unittest.TestCase):
         pass
 
     def test_simple_file(self):
-        simple_builder = Builder(file="files/simple.html")
-        print(simple_builder.layout)
+        """Check that components are properly built from the HTML file."""
+        builder = Builder(file="files/simple.html")
+        dropdown = builder.get_component("color-dropdown")
+        self.assertIsNotNone(dropdown)
+        self.assertIsNone(builder.get_component("invalid-dropdown"))
+        self.assertIn("Red", dropdown.options)
 
     def test_empty_file(self):
         """Check that the empty layout file creates no layout."""

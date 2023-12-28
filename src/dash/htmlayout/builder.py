@@ -3,7 +3,7 @@ import re
 import sys
 from importlib import import_module
 from os import PathLike
-from typing import Optional, Type, Any
+from typing import Optional, Type, Any, Union
 
 from dash.development.base_component import Component
 from lxml import etree
@@ -61,7 +61,7 @@ class Builder:
     # Layout root component
     layout: Optional[Component] = None
 
-    def __new__(cls, *args, file: PathLike = None, **kwargs) -> "Builder":
+    def __new__(cls, *args, file: Union[PathLike, str] = None, **kwargs) -> "Builder":
         """
         Instanciate a new LayoutBuilder object.
 
@@ -147,7 +147,7 @@ class Builder:
             return True
         return False
 
-    def load(self, path: PathLike) -> Component:
+    def load(self, path: Union[PathLike, str]) -> Component:
         """
         Build a layout from an HTML file.
 
