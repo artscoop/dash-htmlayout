@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dash-htmlayout"
-version = "1.0.4"
+version = "1.0.5"
 authors = [
   { name="Steve Kossouho", email="noreply@example.com" },
 ]
