@@ -1,6 +1,6 @@
 """Build layouts from HTML snippets."""
+import logging
 import re
-import sys
 from importlib import import_module
 from os import PathLike
 from typing import Optional, Type, Any, Union
@@ -10,6 +10,8 @@ from lxml import etree
 from lxml.etree import _Element
 
 from .converters import evaluate
+
+logger = logging.getLogger("dash.htmlayout")
 
 
 class Builder:
@@ -117,10 +119,9 @@ class Builder:
                             full_name: str = f"{full_prefix}{tag_name}"
                             cls._component_registry[full_name] = symbol
             except ImportError:
-                print(
+                logger.warning(
                     f"Warning: {module_name} is listed in LayoutBuilder "
-                    f"registry but could not be imported.",
-                    file=sys.stderr,
+                    f"registry but could not be imported."
                 )
 
     @classmethod
@@ -131,7 +132,7 @@ class Builder:
         Register a new module providing Dash components.
 
         A sensible default is already provided for known libraries,
-        but you can custom libraries with this method. You just have to
+        but you can register custom libraries with this method. You just have to
         call this by passing a module path and a prefix to apply to detected
         components:
 
@@ -139,6 +140,13 @@ class Builder:
         from dash.htmlayout import Builder
 
         Builder.register_library("dash_colorful_lib", "colorful")
+        ```
+
+        You can then insert components in your HTML files with the
+        provided prefix, ie.:
+
+        ```html
+        <colorful-componentname id="component-id">...
         ```
         """
         if path not in cls._module_registry or replace:
@@ -165,7 +173,7 @@ class Builder:
 
     def get_component(self, identifier: str) -> Optional[Component]:
         """
-        Get component instance in the loqded lqyout given an ID.
+        Get component instance in the loaded layout given an ID.
 
         Args:
             identifier: id given to the component.
